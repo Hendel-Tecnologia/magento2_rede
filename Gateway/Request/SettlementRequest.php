@@ -61,8 +61,6 @@ class SettlementRequest implements BuilderInterface
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
 
-        // $orderdetails = $this->order->loadByIncrementId($order_id);
-
         $order = $paymentDO->getOrder();
 
         $payment = $paymentDO->getPayment();
