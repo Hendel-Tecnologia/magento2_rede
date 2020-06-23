@@ -14,10 +14,10 @@ Caso prefira, é possível instalar o módulo através de sua release. Para isso
 1. Crie o diretório do módulo:
    * `mkdir -p app/code/Rede/Adquirencia`
 2. Faça o download da última release do módulo:
-   * `wget https://github.com/Hendel-Tecnologia/magento2_rede/archive/1.2.1-h.zip -P app/code/Rede/Adquirencia/`
+   * `wget https://github.com/Hendel-Tecnologia/magento2_rede/archive/1.2.1-h.zip -O app/code/Rede/Adquirencia/magento.zip`
 3. Descompacte o módulo:
    * `unzip app/code/Rede/Adquirencia/magento.zip -d app/code/Rede/Adquirencia/`
-4.Apague o zip:
+4. Apague o zip:
    * `rm app/code/Rede/Adquirencia/magento.zip`
 5. Instale o SDK PHP:
    * `composer require developersrede/erede-php`
