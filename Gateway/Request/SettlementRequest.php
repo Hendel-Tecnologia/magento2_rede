@@ -10,9 +10,20 @@ use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Rede\Adquirencia\Gateway\Helper\SubjectReader;
-
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Sales\Api\InvoiceRepositoryInterface;
 class SettlementRequest implements BuilderInterface
 {
+    /**
+     * @var InvoiceRepositoryInterface
+     */
+    private $invoiceRepository;
+
+    /**
+     * @var SearchCriteriaBuilder
+     */
+    protected $searchCriteriaBuilder;
+
     /**
      * @var ConfigInterface
      */
@@ -29,11 +40,15 @@ class SettlementRequest implements BuilderInterface
      */
     public function __construct(
         ConfigInterface $config,
-        SubjectReader $subjectReader
+        SubjectReader $subjectReader,
+        SearchCriteriaBuilder $searchCriteriaBuilder,
+        InvoiceRepositoryInterface $invoiceRepository
     )
     {
         $this->config = $config;
         $this->subjectReader = $subjectReader;
+        $this->invoiceRepository = $invoiceRepository;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
     }
 
     /**
@@ -46,6 +61,8 @@ class SettlementRequest implements BuilderInterface
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
 
+        // $orderdetails = $this->order->loadByIncrementId($order_id);
+
         $order = $paymentDO->getOrder();
 
         $payment = $paymentDO->getPayment();
@@ -54,9 +71,37 @@ class SettlementRequest implements BuilderInterface
             throw new \LogicException('Order payment should be provided.');
         }
 
+        $amount = $this->getInvoiceGrandTotalByOrderId($order->getId());
+
+        if (!$amount) {
+            $amount = $order->getGrandTotalAmount();
+        }
+
         return [
-            'AMOUNT' => $order->getGrandTotalAmount(),
+            'AMOUNT' => $amount,
             'TID' => $payment->getAdditionalInformation('Id Transação')
         ];
+    }
+
+    /**
+     * Get Invoice Grand Total by Order Id
+     *
+     * @param int $orderId
+     * @return float
+     */
+    private function getInvoiceGrandTotalByOrderId(int $orderId)
+    {
+        $total = 0;
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('order_id', $orderId)->create();
+        try {
+            $invoices = $this->invoiceRepository->getList($searchCriteria);
+            foreach ($invoices->getItems() as $invoice) {
+                $total += $invoice->getGrandTotal();
+            }
+        } catch (\Exception $exception) {
+            $total = 0;
+        }
+        return $total;
     }
 }
